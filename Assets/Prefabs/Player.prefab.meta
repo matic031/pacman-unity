@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5a7a5162c4dd8b744aa9e8a054a523ce
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284247
+  packageName: 2D Casual Game Maze Template
+  packageVersion: 1.0
+  assetPath: Assets/2D Casual Game Maze Template/Prefabs/Player.prefab
+  uploadId: 690931

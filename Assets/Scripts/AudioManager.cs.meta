@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: c5f7f3b3c58d16e45beee3defcc47394
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284247
+  packageName: 2D Casual Game Maze Template
+  packageVersion: 1.0
+  assetPath: Assets/2D Casual Game Maze Template/Scripts/AudioManager.cs
+  uploadId: 690931

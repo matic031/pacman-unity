@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 4666653bb88e54d45b81d6711b3503c2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284247
+  packageName: 2D Casual Game Maze Template
+  packageVersion: 1.0
+  assetPath: Assets/2D Casual Game Maze Template/Scripts/DataScript.cs
+  uploadId: 690931

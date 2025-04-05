@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ac3dc68e404230642a6ec45540b06655
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284247
+  packageName: 2D Casual Game Maze Template
+  packageVersion: 1.0
+  assetPath: Assets/2D Casual Game Maze Template/Prefabs/WinSquare.prefab
+  uploadId: 690931

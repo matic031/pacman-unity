@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: fade42e8bc714b018fac513c043d323b
+timeCreated: 1425440388
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284247
+  packageName: 2D Casual Game Maze Template
+  packageVersion: 1.0
+  assetPath: Assets/2D Casual Game Maze Template/TextMesh Pro/Resources/LineBreaking
+    Following Characters.txt
+  uploadId: 690931
