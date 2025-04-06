@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: c8d12adcee749c344b8117cf7c7eb912
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284247
+  packageName: 2D Casual Game Maze Template
+  packageVersion: 1.0
+  assetPath: Assets/2D Casual Game Maze Template/TextMesh Pro/Shaders/TMP_SDF-Mobile
+    SSD.shader
+  uploadId: 690931

@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: a02a7d8c237544f1962732b55a9aebf1
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 284247
+  packageName: 2D Casual Game Maze Template
+  packageVersion: 1.0
+  assetPath: Assets/2D Casual Game Maze Template/TextMesh Pro/Shaders/TMP_SDF-Mobile
+    Overlay.shader
+  uploadId: 690931
