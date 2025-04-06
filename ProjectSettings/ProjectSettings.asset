@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 28
-  productGUID: 00000000000000000000000000000000
+  productGUID: c7580ddf277fa61ebaa30dfdf2dcd183
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -916,7 +916,7 @@ PlayerSettings:
   cloudProjectId: fee937ce-434e-4989-a652-69d54f4ff2fd
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Casual 2D Game
+  projectName: Pacman
   organizationId: puzzlefoxy
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

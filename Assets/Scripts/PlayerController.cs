@@ -11,15 +11,16 @@ namespace MazeTemplate
         [SerializeField] private GameplayUI gameplayUI;
         private Rigidbody2D rb;
         private float speed = 10;
-
         private Vector2 startTouchPosition;
         private Vector2 endTouchPosition;
+        private Vector2 nextDirection;
 
         private void Start()
         {
             gameplayUI = GameObject.Find("Gameplay").GetComponent<GameplayUI>();
             rb = GetComponent<Rigidbody2D>();
             canMove = true;
+            nextDirection = Vector2.zero;
         }
 
         private void Update()
@@ -45,26 +46,58 @@ namespace MazeTemplate
                 {
                     if (inputVector.x > 0)
                     {
-                        rb.linearVelocity = Vector2.right * speed;
-                        DoSomething();
+                        if (canMove)
+                        {
+                            rb.linearVelocity = Vector2.right * speed;
+                            transform.eulerAngles = new Vector3(0, 0, 0);
+                            DoSomething();
+                        }
+                        else
+                        {
+                            nextDirection = Vector2.right;
+                        }
                     }
                     else
                     {
-                        rb.linearVelocity = Vector2.left * speed;
-                        DoSomething();
+                        if (canMove)
+                        {
+                            rb.linearVelocity = Vector2.left * speed;
+                            transform.eulerAngles = new Vector3(0, 0, 180);
+                            DoSomething();
+                        }
+                        else
+                        {
+                            nextDirection = Vector2.left;
+                        }
                     }
                 }
                 else
                 {
                     if (inputVector.y > 0)
                     {
-                        rb.linearVelocity = Vector2.up * speed;
-                        DoSomething();
+                        if (canMove)
+                        {
+                            rb.linearVelocity = Vector2.up * speed;
+                            transform.eulerAngles = new Vector3(0, 0, 90);
+                            DoSomething();
+                        }
+                        else
+                        {
+                            nextDirection = Vector2.up;
+                        }
                     }
                     else
                     {
-                        rb.linearVelocity = Vector2.down * speed;
-                        DoSomething();
+                        if (canMove)
+                        {
+                            rb.linearVelocity = Vector2.down * speed;
+                            transform.eulerAngles = new Vector3(0, 0, 270);
+                            DoSomething();
+                        }
+                        else
+                        {
+                            nextDirection = Vector2.down;
+                        }
                     }
                 }
             }
@@ -80,23 +113,55 @@ namespace MazeTemplate
         {
             if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
             {
-                rb.linearVelocity = Vector2.up * speed;
-                DoSomething();
+                if (canMove)
+                {
+                    rb.linearVelocity = Vector2.up * speed;
+                    transform.eulerAngles = new Vector3(0, 0, 90);
+                    DoSomething();
+                }
+                else
+                {
+                    nextDirection = Vector2.up;
+                }
             }
             if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
             {
-                rb.linearVelocity = Vector2.down * speed;
-                DoSomething();
+                if (canMove)
+                {
+                    rb.linearVelocity = Vector2.down * speed;
+                    transform.eulerAngles = new Vector3(0, 0, 270);
+                    DoSomething();
+                }
+                else
+                {
+                    nextDirection = Vector2.down;
+                }
             }
             if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
             {
-                rb.linearVelocity = Vector2.left * speed;
-                DoSomething();
+                if (canMove)
+                {
+                    rb.linearVelocity = Vector2.left * speed;
+                    transform.eulerAngles = new Vector3(0, 0, 180);
+                    DoSomething();
+                }
+                else
+                {
+                    nextDirection = Vector2.left;
+                }
             }
             if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
             {
-                rb.linearVelocity = Vector2.right * speed;
-                DoSomething();
+                if (canMove)
+                {
+                    rb.linearVelocity = Vector2.right * speed;
+                    transform.eulerAngles = new Vector3(0, 0, 0);
+                    DoSomething();
+                }
+                else
+                {
+                    nextDirection = Vector2.right;
+                }
             }
         }
 
@@ -106,6 +171,16 @@ namespace MazeTemplate
             var xValue = Math.Round(gameObject.transform.position.x, 1);
             var yValue = Math.Round(gameObject.transform.position.y, 1);
             gameObject.transform.position = new Vector2((float)xValue, (float)yValue);
+            if (nextDirection != Vector2.zero)
+            {
+                rb.linearVelocity = nextDirection * speed;
+                if (nextDirection == Vector2.up) transform.eulerAngles = new Vector3(0, 0, 90);
+                if (nextDirection == Vector2.down) transform.eulerAngles = new Vector3(0, 0, 270);
+                if (nextDirection == Vector2.left) transform.eulerAngles = new Vector3(0, 0, 180);
+                if (nextDirection == Vector2.right) transform.eulerAngles = new Vector3(0, 0, 0);
+                DoSomething();
+                nextDirection = Vector2.zero;
+            }
         }
 
         private void OnTriggerEnter2D(Collider2D collision)
