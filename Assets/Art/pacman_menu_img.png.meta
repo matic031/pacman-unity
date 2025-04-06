@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      pacman_menu_img_0: -1701580677138976958
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
