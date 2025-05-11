@@ -295,3 +295,8 @@ MonoBehaviour:
   chaseModeTime: 20
   scatterTarget: {fileID: 0}
   tileSize: 1
+  frightenedSpeedMultiplier: 0.75
+  eatenSpeedMultiplier: 1.5
+  ghostBasePosition: {fileID: 0}
+  frightenedColor: {r: 0, g: 0, b: 1, a: 1}
+  eatenColor: {r: 0.8, g: 0.8, b: 1, a: 0.7}
