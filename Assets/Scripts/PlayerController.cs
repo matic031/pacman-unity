@@ -7,7 +7,7 @@ namespace MazeTemplate
 {
     public class PlayerController : MonoBehaviour
     {
-        [SerializeField] private bool canMove;
+        [SerializeField] public bool canMove;
         [SerializeField] private GameplayUI gameplayUI;
         private Rigidbody2D rb;
         private float speed = 5;
@@ -15,9 +15,15 @@ namespace MazeTemplate
         private Vector2 endTouchPosition;
         private Vector2 nextDirection;
 
+        private LevelManager levelManager;
+
         private void Start()
         {
             gameplayUI = GameObject.Find("Gameplay").GetComponent<GameplayUI>();
+
+             levelManager = FindObjectOfType<LevelManager>(); // Poišči LevelManager v sceni
+            if (levelManager == null) Debug.LogError("LevelManager ni najden v PlayerController!");
+
             rb = GetComponent<Rigidbody2D>();
             canMove = true;
             nextDirection = Vector2.zero;
@@ -187,8 +193,8 @@ namespace MazeTemplate
         {
             if (collision.CompareTag("Win"))
             {
-                gameplayUI.LevelWin();
-                Destroy(gameObject, 3);
+                if (gameplayUI != null) gameplayUI.LevelWin();
+                canMove = false; // Ustavimo igralca
             }
             else if (collision.TryGetComponent<Point>(out Point point))
             {
@@ -197,9 +203,48 @@ namespace MazeTemplate
                 {
                     ScoreManager.Instance.AddPoints(point.PointValue);
                 }
-                // Destroy the point object
+
+                // Uniči objekt točke
                 Destroy(collision.gameObject);
+
+                // Obvesti LevelManager, da je bila točka pobrana
+                if (levelManager != null)
+                {
+                    levelManager.OnPointCollected();
+                }
             }
+        }
+
+        public void PlayerHitByGhost()
+        {
+            if (!canMove) return; // Če je igralec že ustavljen (npr. zmaga ali že mrtev)
+
+            Debug.Log("Player hit by ghost! Game Over.");
+            canMove = false; // Onemogoči nadaljnje premikanje
+            rb.linearVelocity = Vector2.zero; // Takoj ustavi premikanje Rigidbodyja
+
+            // TODO: Tukaj lahko dodaš predvajanje zvoka za smrt, animacijo itd.
+            // if (AudioManager.instance != null) AudioManager.instance.PlayPlayerDeathSound();
+
+            // Pokaži "Lose" panel preko GameplayUI
+            if (gameplayUI != null)
+            {
+                gameplayUI.ShowLosePanel();
+            }
+            else
+            {
+                Debug.LogError("GameplayUI ni dodeljen v PlayerController! Ne morem prikazati Lose Panela.");
+                // Kot fallback lahko poskusiš najti dinamično:
+                // GameplayUI ui = FindObjectOfType<GameplayUI>();
+                // if (ui != null) ui.ShowLosePanel();
+            }
+
+            // Onemogoči GameObject igralca ali samo SpriteRenderer, da izgine
+            // GetComponent<SpriteRenderer>().enabled = false;
+            // GetComponent<Collider2D>().enabled = false;
+            // Ali pa celo:
+            // gameObject.SetActive(false); // To bo preprečilo nadaljnje klice Update itd.
+            // Odloči se, kaj je najboljše za tvojo igro. Za zdaj samo ustavimo premikanje.
         }
     }
 }
