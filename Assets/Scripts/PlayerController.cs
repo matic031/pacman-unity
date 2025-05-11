@@ -10,7 +10,7 @@ namespace MazeTemplate
         [SerializeField] private bool canMove;
         [SerializeField] private GameplayUI gameplayUI;
         private Rigidbody2D rb;
-        private float speed = 10;
+        private float speed = 5;
         private Vector2 startTouchPosition;
         private Vector2 endTouchPosition;
         private Vector2 nextDirection;
@@ -189,6 +189,16 @@ namespace MazeTemplate
             {
                 gameplayUI.LevelWin();
                 Destroy(gameObject, 3);
+            }
+            else if (collision.TryGetComponent<Point>(out Point point))
+            {
+                // Collect the point
+                if (ScoreManager.Instance != null)
+                {
+                    ScoreManager.Instance.AddPoints(point.PointValue);
+                }
+                // Destroy the point object
+                Destroy(collision.gameObject);
             }
         }
     }
