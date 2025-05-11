@@ -9,6 +9,7 @@ namespace MazeTemplate
     {
         [SerializeField] GameObject pausePanel;
         [SerializeField] GameObject winPanel;
+        [SerializeField] public GameObject losePanel; 
         [SerializeField] LevelManager levelManager;
 
         public void PauseButton()
@@ -37,11 +38,50 @@ namespace MazeTemplate
         public void LevelWin()
         {
             winPanel.SetActive(true);
+            Time.timeScale = 0;
         }
 
         public void HideWinPanel()
         {
             winPanel.SetActive(false);
         }
+
+        public void ShowLosePanel()
+        {
+            if (losePanel != null)
+            {
+                losePanel.SetActive(true);
+            }
+            Time.timeScale = 0; // Ustavi igro
+        }
+
+        public void RetryButton()
+        {
+            // Time.timeScale = 1; // LevelManager bo poskrbel za to v RestartCurrentLevel
+
+            if (levelManager != null)
+            {
+                levelManager.RestartCurrentLevel();
+            }
+            else
+            {
+                Debug.LogError("LevelManager ni dodeljen v GameplayUI! Ne morem ponovno zagnati levela.");
+                // Kot fallback lahko poskusiš naložiti sceno, ampak to te vrne v meni
+                // Time.timeScale = 1;
+                // SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            }
+
+            // Skrij LosePanel takoj, da ne ostane viden med ponovnim nalaganjem
+            if (losePanel != null)
+            {
+                losePanel.SetActive(false);
+            }
+        }
+    
+        public void HideLosePanel()
+        {
+            if (losePanel != null) losePanel.SetActive(false);
+        }
+
     }
 }

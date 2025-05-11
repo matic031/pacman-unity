@@ -140,9 +140,14 @@ namespace MazeTemplate
             // Check if we collided with the player
             if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
             {
-                Debug.Log("Game Over");
+                 PlayerController playerController = collision.gameObject.GetComponent<PlayerController>();
+                if (playerController != null && playerController.canMove) // Preveri, če je igralec še "živ" oz. se lahko premika
+                {
+                    playerController.PlayerHitByGhost();
+                    Debug.Log("Game over");
+                }
                 // Optional: You could disable the player movement here
-                // collision.gameObject.GetComponent<PlayerController>().enabled = false;
+                //collision.gameObject.GetComponent<PlayerController>().enabled = false;
             }
         }
 
