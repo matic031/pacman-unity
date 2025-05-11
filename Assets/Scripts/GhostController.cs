@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
 
 namespace MazeTemplate
 {
@@ -6,7 +8,8 @@ namespace MazeTemplate
     {
         Chase,
         Scatter,
-        Frightened
+        Frightened,
+        Eaten 
     }
 
     public class GhostController : MonoBehaviour
@@ -21,7 +24,8 @@ namespace MazeTemplate
         [SerializeField] private float tileSize = 1f; // Size of each tile in the grid
         
         private Rigidbody2D rb;
-        private SpriteRenderer spriteRenderer;
+        //private SpriteRenderer spriteRenderer;
+        private Image imageComponent;
         private Vector2 currentDirection;
         private Vector2[] possibleDirections = { Vector2.up, Vector2.right, Vector2.down, Vector2.left };
         private float modeTimer;
@@ -29,6 +33,15 @@ namespace MazeTemplate
         private bool isStuck = false;
         private float stuckCheckTimer = 0f;
         private float stuckCheckInterval = 0.5f;
+
+        [SerializeField] private float frightenedSpeedMultiplier = 0.75f; 
+        [SerializeField] private float eatenSpeedMultiplier = 1.5f;   
+        [SerializeField] private Transform ghostBasePosition;         
+        [SerializeField] private Color frightenedColor = Color.blue;  
+        [SerializeField] private Color eatenColor = new Color(0.8f, 0.8f, 1f, 0.7f);
+
+        private Color originalColorActual; // Za shranjevanje dejanske originalne barve ob Start()
+        private Coroutine frightenedTimerCoroutine; // Za upravljanje timerja Frightened stanja
         
         // Tile-based movement variables
         private Vector3 targetPosition;
@@ -37,9 +50,18 @@ namespace MazeTemplate
         private void Start()
         {
             rb = GetComponent<Rigidbody2D>();
-            spriteRenderer = GetComponent<SpriteRenderer>();
+            //spriteRenderer = GetComponent<SpriteRenderer>();
+            imageComponent = GetComponent<Image>();
+            //originalColorActual = spriteRenderer.color;
+
+            if (ghostBasePosition == null) 
+            {
+                GameObject tempBase = new GameObject(gameObject.name + "_AutoBasePos");
+                tempBase.transform.position = transform.position;
+                ghostBasePosition = tempBase.transform;
+                Debug.LogWarning($"Ghost {gameObject.name}: GhostBasePosition not assigned! Using initial position. Assign a Transform in Inspector.");
+            }
             
-            // Try to find the player if not assigned in the inspector
             if (playerTransform == null)
             {
                 var player = GameObject.FindGameObjectWithTag("Player");
@@ -48,10 +70,11 @@ namespace MazeTemplate
             }
 
             // Set ghost color
-            if (spriteRenderer != null)
-                spriteRenderer.color = ghostColor;
-            
-            // Ensure the ghost is aligned to the grid
+            if (imageComponent != null) originalColorActual = imageComponent.color; 
+            else originalColorActual = ghostColor; // Fallback na ghostColor, če Image ni najden
+
+            if (imageComponent != null) imageComponent.color = originalColorActual; 
+
             SnapToGrid();
             targetPosition = transform.position;
             
@@ -76,10 +99,13 @@ namespace MazeTemplate
         private void Update()
         {
             // Update mode timer and switch modes if needed
-            modeTimer -= Time.deltaTime;
-            if (modeTimer <= 0)
+            if (currentState != GhostState.Frightened && currentState != GhostState.Eaten)
             {
-                SwitchMode();
+                modeTimer -= Time.deltaTime;
+                if (modeTimer <= 0)
+                {
+                    SwitchMode(); // Samo za Chase/Scatter
+                }
             }
             
             // Check if the ghost is stuck
@@ -93,18 +119,28 @@ namespace MazeTemplate
             // Tile-based movement
             if (isMoving)
             {
-                // Move smoothly towards the target tile
-                transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+                float currentSpeed = moveSpeed;
+
+                if (currentState == GhostState.Frightened) currentSpeed *= frightenedSpeedMultiplier;
+                else if (currentState == GhostState.Eaten) currentSpeed *= eatenSpeedMultiplier;
+
+                transform.position = Vector3.MoveTowards(transform.position, targetPosition, currentSpeed * Time.deltaTime);
                 
-                // Check if we've reached the target position
                 if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
                 {
-                    // Snap to exact position to avoid floating point errors
                     transform.position = targetPosition;
                     isMoving = false;
                     
-                    // Choose next direction when reaching a tile center
-                    DecideNextDirection();
+
+                    if (currentState == GhostState.Eaten && ghostBasePosition != null &&
+                        Vector3.Distance(transform.position, ghostBasePosition.position) < tileSize * 0.1f)
+                    {
+                        ResetFromEatenState();
+                    }
+                    else
+                    {
+                        DecideNextDirection();
+                    }
                 }
             }
             else if (!isMoving)
@@ -135,18 +171,70 @@ namespace MazeTemplate
             return false;
         }
 
-        private void OnCollisionEnter2D(Collision2D collision)
+         private void OnCollisionEnter2D(Collision2D collision)
         {
-            // Check if we collided with the player
+            Debug.Log($"{gameObject.name} OnCollisionEnter2D triggered with: {collision.gameObject.name} which has tag: {collision.gameObject.tag}");
             if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
             {
-                 PlayerController playerController = collision.gameObject.GetComponent<PlayerController>();
-                if (playerController != null && playerController.canMove) // Preveri, če je igralec še "živ" oz. se lahko premika
-                {
-                    playerController.PlayerHitByGhost();
-                    Debug.Log("Game over");
-                }
+                Debug.Log($"{gameObject.name} collided with Player tagged object."); 
+
+                PlayerController playerController = collision.gameObject.GetComponent<PlayerController>();
+            if (playerController != null)
+            {
+                Debug.Log($"{gameObject.name}: PlayerController found on collided object. Player canMove: {playerController.canMove}, Ghost currentState: {currentState}"); // DEBUG Log
+
+    
+            if (playerController.canMove && currentState != GhostState.Frightened && currentState != GhostState.Eaten)
+            {
+                Debug.Log($"{gameObject.name} is calling PlayerHitByGhost()."); 
+                playerController.PlayerHitByGhost(); // Duh ujame Pacmana
             }
+            else if (currentState == GhostState.Frightened && playerController.canMove)
+            {
+                 GetEaten(); // Pacman poje duha
+                Debug.Log($"{gameObject.name} is Frightened. Player collided, but GetEaten() logic is currently handled here or later.");
+            }
+            }
+            else
+            {
+                Debug.LogError($"{gameObject.name} collided with Player tagged object, but PlayerController component is missing!");
+            }
+            }
+            else
+            {
+            
+            }
+        }
+
+        private void GetEaten()
+        {
+            Debug.Log($"{gameObject.name} got eaten!");
+            currentState = GhostState.Eaten;
+            if (imageComponent != null) imageComponent.color = eatenColor;
+
+            if (frightenedTimerCoroutine != null)
+            {
+                StopCoroutine(frightenedTimerCoroutine);
+                frightenedTimerCoroutine = null;
+            }
+            
+            if (ScoreManager.Instance != null)
+            {
+                ScoreManager.Instance.AddPoints(200);
+            }
+            DecideNextDirection(); // Začni pot proti bazi
+        }
+
+        private void ResetFromEatenState()
+        {
+            Debug.Log($"{gameObject.name} returned to base and is resetting.");
+            SnapToGrid();
+            transform.position = ghostBasePosition.position; // Postavi točno na bazo
+            currentState = GhostState.Chase; 
+            if (imageComponent != null) imageComponent.color = originalColorActual;
+            modeTimer = chaseModeTime; // Ali scatterModeTime
+            isMoving = false;
+            ChooseRandomDirection(); // Izberi novo smer iz baze
         }
 
         private void DecideNextDirection()
@@ -163,6 +251,31 @@ namespace MazeTemplate
                 case GhostState.Frightened:
                     ChooseRandomDirection();
                     break;
+                    case GhostState.Eaten: // Novo
+                    if (ghostBasePosition != null)
+                    {
+                        
+                        Vector2 toBase = ((Vector2)ghostBasePosition.position - (Vector2)transform.position).normalized;
+                
+                        Vector2[] dirs = GetAvailableDirections(); // Uporabi obstoječo, ki preprečuje obračanje
+                        if (dirs.Length > 0) {
+                            currentDirection = dirs[0]; // Zelo osnovno, samo za prikaz
+                            float bestDot = -2;
+                            foreach(Vector2 d in dirs) {
+                                float dot = Vector2.Dot(d, toBase);
+                                if (dot > bestDot) {
+                                    bestDot = dot;
+                                    currentDirection = d;
+                                }
+                            }
+                        } else if (TryMove(-currentDirection)) {} // Če ni poti, se obrni
+                        
+                        TryMove(currentDirection);
+
+                    }
+                    else ResetFromEatenState(); // Če ni baze, se takoj resetiraj
+                    break;
+            
             }
         }
 
@@ -327,24 +440,60 @@ namespace MazeTemplate
 
         public void SetFrightened(float duration)
         {
-            // This would be called when Pacman eats a power pellet
-            currentState = GhostState.Frightened;
-            spriteRenderer.color = Color.blue;
-            modeTimer = duration;
-            
-            // Reverse direction when entering frightened mode
-            currentDirection = -currentDirection;
-            if (!isMoving)
+            if (currentState == GhostState.Eaten) return; // Ne postani Frightened, če si že pojeden
+
+            if (frightenedTimerCoroutine != null)
             {
-                TryMove(currentDirection);
+                StopCoroutine(frightenedTimerCoroutine);
             }
+            currentState = GhostState.Frightened;
+            if(imageComponent != null) imageComponent.color = frightenedColor; // Uporabi frightenedColor
+            
+            frightenedTimerCoroutine = StartCoroutine(FrightenedTimer(duration));
+            
+            // Duhovi se obrnejo, ko postanejo frightened
+            if (!isMoving) // Če se ne premika že
+            {
+                Vector2 reverseDirection = -currentDirection;
+                if(TryMove(reverseDirection)) // Poskusi se obrniti
+                {
+                    currentDirection = reverseDirection;
+                } else { 
+                    DecideNextDirection();
+                }
+            }
+        }
+
+        private IEnumerator FrightenedTimer(float duration)
+        {
+            float timeLeft = duration;
+            while (timeLeft > 0)
+            {
+                timeLeft -= Time.deltaTime;
+                if (timeLeft < duration * 0.4f) // Utripaj zadnjih 40% časa
+                {
+                    float flashSpeed = 0.5f; // Sekunde na cikel utripa
+                    imageComponent.color = (Mathf.FloorToInt(timeLeft / (flashSpeed / 2f)) % 2 == 0) ? originalColorActual : frightenedColor;
+                }
+                else
+                {
+                    imageComponent.color = frightenedColor;
+                }
+                yield return null;
+            }
+
+            if (currentState == GhostState.Frightened) // Če ga ni vmes pojedel Pacman
+            {
+                ResetToNormalState();
+            }
+            frightenedTimerCoroutine = null;
         }
 
         public void ResetToNormalState()
         {
-            // Return to normal state (called after frightened mode ends)
+            // Return to normal state 
             currentState = GhostState.Chase;
-            spriteRenderer.color = ghostColor;
+            if(imageComponent != null) imageComponent.color = originalColorActual;
             modeTimer = chaseModeTime;
         }
     }

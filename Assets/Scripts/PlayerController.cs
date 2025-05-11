@@ -189,62 +189,80 @@ namespace MazeTemplate
             }
         }
 
-        private void OnTriggerEnter2D(Collider2D collision)
+       private void OnTriggerEnter2D(Collider2D collision)
         {
             if (collision.CompareTag("Win"))
             {
                 if (gameplayUI != null) gameplayUI.LevelWin();
-                canMove = false; // Ustavimo igralca
+                canMove = false;
             }
             else if (collision.TryGetComponent<Point>(out Point point))
             {
-                // Collect the point
-                if (ScoreManager.Instance != null)
-                {
-                    ScoreManager.Instance.AddPoints(point.PointValue);
-                }
-
-                // Uniči objekt točke
+                if (ScoreManager.Instance != null) ScoreManager.Instance.AddPoints(point.PointValue);
                 Destroy(collision.gameObject);
-
-                // Obvesti LevelManager, da je bila točka pobrana
-                if (levelManager != null)
+                if (levelManager != null) levelManager.OnPointCollected();
+            }
+            else if (collision.CompareTag("Energizer"))
+            {
+                Energizer energizer = collision.GetComponent<Energizer>();
+                if (energizer != null)
                 {
-                    levelManager.OnPointCollected();
+                    if (ScoreManager.Instance != null) ScoreManager.Instance.AddPoints(energizer.PointValue);
+                    
+                    ActivateFrightenedModeOnGhosts(energizer.FrightenedDuration);
+
+                    Destroy(collision.gameObject);
                 }
             }
+        }
+
+        private void ActivateFrightenedModeOnGhosts(float duration)
+        {
+            GhostController[] ghosts = FindObjectsOfType<GhostController>(); 
+            if (ghosts.Length == 0) {
+                Debug.LogWarning("No ghosts found to activate frightened mode.");
+                return;
+            }
+            foreach (GhostController ghost in ghosts)
+            {
+                ghost.SetFrightened(duration); 
+            }
+            Debug.Log($"Player ate Energizer! All ghosts set to frightened mode for {duration} seconds.");
         }
 
         public void PlayerHitByGhost()
-        {
-            if (!canMove) return; // Če je igralec že ustavljen (npr. zmaga ali že mrtev)
+{
+    if (!canMove) // Če je igralec že ustavljen (npr. že mrtev ali zmagal)
+    {
+        Debug.Log("PlayerHitByGhost called, but player canMove is already false. No action taken.");
+        return; 
+    }
 
-            Debug.Log("Player hit by ghost! Game Over.");
-            canMove = false; // Onemogoči nadaljnje premikanje
-            rb.linearVelocity = Vector2.zero; // Takoj ustavi premikanje Rigidbodyja
+    Debug.Log("PlayerHitByGhost() called successfully in PlayerController."); 
+    canMove = false; // Onemogoči nadaljnje premikanje Pacmana
+    
+    if (rb != null)
+    {
+        rb.linearVelocity = Vector2.zero; // Takoj ustavi premikanje Rigidbodyja
+        Debug.Log("Player Rigidbody velocity set to zero."); 
+    }
+    else
+    {
+        Debug.LogWarning("Player Rigidbody (rb) is null in PlayerHitByGhost(). Cannot set velocity to zero.");
+    }
+    
 
-            // TODO: Tukaj lahko dodaš predvajanje zvoka za smrt, animacijo itd.
-            // if (AudioManager.instance != null) AudioManager.instance.PlayPlayerDeathSound();
 
-            // Pokaži "Lose" panel preko GameplayUI
-            if (gameplayUI != null)
-            {
-                gameplayUI.ShowLosePanel();
-            }
-            else
-            {
-                Debug.LogError("GameplayUI ni dodeljen v PlayerController! Ne morem prikazati Lose Panela.");
-                // Kot fallback lahko poskusiš najti dinamično:
-                // GameplayUI ui = FindObjectOfType<GameplayUI>();
-                // if (ui != null) ui.ShowLosePanel();
-            }
-
-            // Onemogoči GameObject igralca ali samo SpriteRenderer, da izgine
-            // GetComponent<SpriteRenderer>().enabled = false;
-            // GetComponent<Collider2D>().enabled = false;
-            // Ali pa celo:
-            // gameObject.SetActive(false); // To bo preprečilo nadaljnje klice Update itd.
-            // Odloči se, kaj je najboljše za tvojo igro. Za zdaj samo ustavimo premikanje.
-        }
+    // Pokaži Lose panel preko GameplayUI
+    if (gameplayUI != null)
+    {
+        Debug.Log("Calling gameplayUI.ShowLosePanel()."); 
+        gameplayUI.ShowLosePanel();
+    }
+    else
+    {
+        Debug.LogError("GameplayUI reference is NULL in PlayerController! Cannot show Lose Panel.");
+    }
+}
     }
 }
