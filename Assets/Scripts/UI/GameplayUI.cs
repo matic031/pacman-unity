@@ -57,7 +57,6 @@ namespace MazeTemplate
 
         public void RetryButton()
         {
-            // Time.timeScale = 1; // LevelManager bo poskrbel za to v RestartCurrentLevel
 
             if (levelManager != null)
             {
@@ -66,12 +65,8 @@ namespace MazeTemplate
             else
             {
                 Debug.LogError("LevelManager ni dodeljen v GameplayUI! Ne morem ponovno zagnati levela.");
-                // Kot fallback lahko poskusiš naložiti sceno, ampak to te vrne v meni
-                // Time.timeScale = 1;
-                // SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
 
-            // Skrij LosePanel takoj, da ne ostane viden med ponovnim nalaganjem
             if (losePanel != null)
             {
                 losePanel.SetActive(false);

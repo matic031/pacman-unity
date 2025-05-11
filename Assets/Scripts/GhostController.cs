@@ -146,8 +146,6 @@ namespace MazeTemplate
                     playerController.PlayerHitByGhost();
                     Debug.Log("Game over");
                 }
-                // Optional: You could disable the player movement here
-                //collision.gameObject.GetComponent<PlayerController>().enabled = false;
             }
         }
 
