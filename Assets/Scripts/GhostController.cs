@@ -69,7 +69,7 @@ namespace MazeTemplate
                     playerTransform = player.transform;
             }
 
-            // Set ghost color
+            // ghost color
             if (imageComponent != null) originalColorActual = imageComponent.color; 
             else originalColorActual = ghostColor; // Fallback na ghostColor, če Image ni najden
 
@@ -78,13 +78,10 @@ namespace MazeTemplate
             SnapToGrid();
             targetPosition = transform.position;
             
-            // Choose a random starting direction
             ChooseRandomDirection();
             
-            // Initialize mode timer
             modeTimer = currentState == GhostState.Chase ? chaseModeTime : scatterModeTime;
             
-            // Store initial position for stuck detection
             lastPosition = transform.position;
         }
 
@@ -98,7 +95,6 @@ namespace MazeTemplate
 
         private void Update()
         {
-            // Update mode timer and switch modes if needed
             if (currentState != GhostState.Frightened && currentState != GhostState.Eaten)
             {
                 modeTimer -= Time.deltaTime;
@@ -150,22 +146,17 @@ namespace MazeTemplate
 
         private bool TryMove(Vector2 direction)
         {
-            // Calculate the next position (exactly one tile away)
             Vector3 nextPos = transform.position + new Vector3(direction.x, direction.y, 0) * tileSize;
             
-            // Check if there's a wall in that direction
             RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, tileSize, LayerMask.GetMask("Wall"));
             if (hit.collider == null)
             {
-                // Path is clear, set target position to the next tile
                 targetPosition = nextPos;
                 isMoving = true;
-                // Disable rigidbody velocity to avoid physics interference
                 rb.linearVelocity = Vector2.zero;
                 return true;
             }
             
-            // Path blocked, can't move in this direction
             return false;
         }
 
@@ -209,7 +200,6 @@ namespace MazeTemplate
             Debug.Log($"{gameObject.name} got eaten!");
             currentState = GhostState.Eaten;
             
-            // Disable the entire ghost GameObject when eaten
             gameObject.SetActive(false);
 
             if (frightenedTimerCoroutine != null)
@@ -223,22 +213,18 @@ namespace MazeTemplate
                 ScoreManager.Instance.AddPoints(200);
             }
             
-            // Start a coroutine to re-enable the ghost after a delay
             StartCoroutine(ReenableAfterDelay());
         }
 
         private IEnumerator ReenableAfterDelay()
         {
-            // Wait a short time before reactivating at the base position
             yield return new WaitForSeconds(2f);
             
-            // Set position to ghost base before enabling
             if (ghostBasePosition != null)
             {
                 transform.position = ghostBasePosition.position;
             }
             
-            // Re-enable the ghost and reset state
             gameObject.SetActive(true);
             ResetFromEatenState();
         }
@@ -252,7 +238,6 @@ namespace MazeTemplate
             if (imageComponent != null) 
             {
                 imageComponent.color = originalColorActual;
-                // Make ghost visible again
                 imageComponent.enabled = true;
             }
             modeTimer = chaseModeTime; // Ali scatterModeTime
@@ -262,7 +247,6 @@ namespace MazeTemplate
 
         private void DecideNextDirection()
         {
-            // Choose the next direction based on the current mode
             switch (currentState)
             {
                 case GhostState.Chase:
@@ -274,7 +258,7 @@ namespace MazeTemplate
                 case GhostState.Frightened:
                     ChooseRandomDirection();
                     break;
-                    case GhostState.Eaten: // Novo
+                    case GhostState.Eaten:
                     if (ghostBasePosition != null)
                     {
                         
@@ -310,28 +294,23 @@ namespace MazeTemplate
                 return;
             }
 
-            // Find available directions (not walls)
             Vector2[] availableDirections = GetAvailableDirections();
             
             if (availableDirections.Length == 0)
             {
-                // If no directions are available, just reverse
                 currentDirection = -currentDirection;
                 TryMove(currentDirection);
                 return;
             }
 
-            // Choose the direction that gets closer to the player
             Vector2 toPlayer = (Vector2)playerTransform.position - (Vector2)transform.position;
             float bestScore = float.MinValue;
             Vector2 bestDirection = currentDirection;
             
-            // Don't go back the way we came unless it's the only option
             Vector2 oppositeDirection = -currentDirection;
             
             foreach (Vector2 dir in availableDirections)
             {
-                // Try to avoid reversing direction
                 if (dir == oppositeDirection && availableDirections.Length > 1)
                     continue;
                     
@@ -355,7 +334,6 @@ namespace MazeTemplate
                 return;
             }
 
-            // Similar to chase but target the scatter point
             Vector2[] availableDirections = GetAvailableDirections();
             
             if (availableDirections.Length == 0)
@@ -394,25 +372,21 @@ namespace MazeTemplate
             
             if (availableDirections.Length == 0)
             {
-                // If no directions are available, just reverse
                 currentDirection = -currentDirection;
                 TryMove(currentDirection);
                 return;
             }
             
-            // Choose a random available direction
             currentDirection = availableDirections[Random.Range(0, availableDirections.Length)];
             TryMove(currentDirection);
         }
 
         private Vector2[] GetAvailableDirections()
         {
-            // Check which directions don't have walls at tile-distance
             System.Collections.Generic.List<Vector2> available = new System.Collections.Generic.List<Vector2>();
             
             foreach (Vector2 dir in possibleDirections)
             {
-                // Don't check the opposite direction (don't want to go back)
                 if (dir == -currentDirection && !isStuck)
                     continue;
                     
@@ -438,9 +412,7 @@ namespace MazeTemplate
                 modeTimer = chaseModeTime;
             }
             
-            // When switching modes, ghosts typically reverse direction
             currentDirection = -currentDirection;
-            // Only try to move if we're not already moving
             if (!isMoving)
             {
                 TryMove(currentDirection);
@@ -454,7 +426,6 @@ namespace MazeTemplate
             
             if (isStuck && !isMoving)
             {
-                // Try to unstick by choosing a random direction
                 ChooseRandomDirection();
             }
             
@@ -514,7 +485,6 @@ namespace MazeTemplate
 
         public void ResetToNormalState()
         {
-            // Return to normal state 
             currentState = GhostState.Chase;
             if(imageComponent != null) imageComponent.color = originalColorActual;
             modeTimer = chaseModeTime;
