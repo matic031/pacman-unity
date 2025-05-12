@@ -108,7 +108,6 @@ namespace MazeTemplate
                 }
             }
             
-            // Check if the ghost is stuck
             stuckCheckTimer += Time.deltaTime;
             if (stuckCheckTimer >= stuckCheckInterval)
             {
@@ -116,7 +115,6 @@ namespace MazeTemplate
                 stuckCheckTimer = 0f;
             }
             
-            // Tile-based movement
             if (isMoving)
             {
                 float currentSpeed = moveSpeed;
@@ -210,7 +208,9 @@ namespace MazeTemplate
         {
             Debug.Log($"{gameObject.name} got eaten!");
             currentState = GhostState.Eaten;
-            if (imageComponent != null) imageComponent.color = eatenColor;
+            
+            // Disable the entire ghost GameObject when eaten
+            gameObject.SetActive(false);
 
             if (frightenedTimerCoroutine != null)
             {
@@ -222,7 +222,25 @@ namespace MazeTemplate
             {
                 ScoreManager.Instance.AddPoints(200);
             }
-            DecideNextDirection(); // Začni pot proti bazi
+            
+            // Start a coroutine to re-enable the ghost after a delay
+            StartCoroutine(ReenableAfterDelay());
+        }
+
+        private IEnumerator ReenableAfterDelay()
+        {
+            // Wait a short time before reactivating at the base position
+            yield return new WaitForSeconds(2f);
+            
+            // Set position to ghost base before enabling
+            if (ghostBasePosition != null)
+            {
+                transform.position = ghostBasePosition.position;
+            }
+            
+            // Re-enable the ghost and reset state
+            gameObject.SetActive(true);
+            ResetFromEatenState();
         }
 
         private void ResetFromEatenState()
@@ -231,7 +249,12 @@ namespace MazeTemplate
             SnapToGrid();
             transform.position = ghostBasePosition.position; // Postavi točno na bazo
             currentState = GhostState.Chase; 
-            if (imageComponent != null) imageComponent.color = originalColorActual;
+            if (imageComponent != null) 
+            {
+                imageComponent.color = originalColorActual;
+                // Make ghost visible again
+                imageComponent.enabled = true;
+            }
             modeTimer = chaseModeTime; // Ali scatterModeTime
             isMoving = false;
             ChooseRandomDirection(); // Izberi novo smer iz baze

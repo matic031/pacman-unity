@@ -12,7 +12,6 @@ namespace MazeTemplate
 
         private void Awake()
         {
-            // Singleton pattern
             if (Instance == null)
             {
                 Instance = this;
