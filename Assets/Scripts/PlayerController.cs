@@ -145,7 +145,7 @@ namespace MazeTemplate
         }
 
         // --- Klicano, ko te ujame duh ---
-        public void PlayerHitByGhost()
+        public void PlayerHitByGhost(bool ghostWasFrightened)
         {
             if (!canMove)
             {
@@ -165,15 +165,18 @@ namespace MazeTemplate
                 Debug.LogWarning("Player Rigidbody (rb) is null in PlayerHitByGhost(). Cannot set velocity to zero.");
             }
 
+            if (!ghostWasFrightened && ScoreManager.Instance != null)
+                ScoreManager.Instance.ResetScore();
+
             if (gameplayUI != null)
-            {
-                Debug.Log("Calling gameplayUI.ShowLosePanel().");
-                gameplayUI.ShowLosePanel();
-            }
-            else
-            {
-                Debug.LogError("GameplayUI reference is NULL in PlayerController! Cannot show Lose Panel.");
-            }
+                {
+                    Debug.Log("Calling gameplayUI.ShowLosePanel().");
+                    gameplayUI.ShowLosePanel();
+                }
+                else
+                {
+                    Debug.LogError("GameplayUI reference is NULL in PlayerController! Cannot show Lose Panel.");
+                }
         }
 
         // --- Touch swipe support ---

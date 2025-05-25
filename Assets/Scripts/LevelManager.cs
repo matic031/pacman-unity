@@ -18,7 +18,6 @@ namespace MazeTemplate
 
         private void Awake()
         {
-            // Poskusimo dobiti GameplayUI komponento iz gameplayPanel-a
             if (gameplayPanel != null)
             {
                 gameplayUIComponent = gameplayPanel.GetComponent<GameplayUI>();
@@ -43,10 +42,8 @@ namespace MazeTemplate
                 return;
             }
 
+            currentLevelNumber = levelIndex;
 
-            currentLevelNumber = levelIndex; // Shrani indeks trenutno izbranega levela
-
-            // Počisti prejšnji level, če obstaja
             if (currentLevelPrefab != null)
             {
                 Destroy(currentLevelPrefab);
@@ -69,17 +66,17 @@ namespace MazeTemplate
             currentLevelNumber++;
             if (currentLevelNumber >= levels.Length)
             {
-                currentLevelNumber = 0; // Vrni se na prvi level, če smo na koncu
+                currentLevelNumber = 0;
                 Debug.Log("All levels completed! Restarting from level 1.");
             }
             currentLevelPrefab = Instantiate(levels[currentLevelNumber]);
-            InitializeLevelData(); // Kličemo inicializacijo podatkov za level
+            InitializeLevelData();
 
             if (gameplayUIComponent != null)
             {
                 gameplayUIComponent.HideWinPanel();
             }
-            else if (gameplayPanel != null) // Fallback, če gameplayUIComponent ni bil najden v Awake
+            else if (gameplayPanel != null)
             {
                 gameplayPanel.GetComponent<GameplayUI>()?.HideWinPanel();
             }
@@ -95,15 +92,13 @@ namespace MazeTemplate
 
             Debug.Log($"Restarting level: {currentLevelNumber + 1}");
 
-            // Počisti obstoječi level prefab
             if (currentLevelPrefab != null)
             {
                 Destroy(currentLevelPrefab);
             }
 
-            // Ponovno instanciraj isti level
             currentLevelPrefab = Instantiate(levels[currentLevelNumber]);
-            InitializeLevelData(); // Ponovno preštej točke itd.
+            InitializeLevelData();
 
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
             if (playerObject != null)
@@ -111,31 +106,27 @@ namespace MazeTemplate
                 PlayerController pc = playerObject.GetComponent<PlayerController>();
                 if (pc != null)
                 {
-                    pc.canMove = true; // Omogoči premikanje
+                    pc.canMove = true;
                 }
-
             }
             else
             {
                 Debug.LogWarning("Player object not found on RestartCurrentLevel. If player is part of level prefab, this is fine.");
             }
 
-
-            
-            // Skrije Win/Lose panele in aktiviraj gameplay UI
             if (gameplayUIComponent != null)
             {
                 gameplayUIComponent.HideWinPanel();
-                
                 if (gameplayUIComponent.losePanel != null) gameplayUIComponent.losePanel.SetActive(false);
             }
-            if (gameplayPanel != null) gameplayPanel.SetActive(true); // Zagotovi, da je gameplay viden
-            if (levelsMenu != null) levelsMenu.SetActive(false); // Zagotovi, da je meni skrit
+            if (gameplayPanel != null) gameplayPanel.SetActive(true);
+            if (levelsMenu != null) levelsMenu.SetActive(false);
 
-            if (ScoreManager.Instance != null)
-            {
-                ScoreManager.Instance.ResetScore();
-            }
+            // ODSTRANI ali ZAKOMENTIRAJ naslednje vrstice, da se score NE resetira:
+            // if (ScoreManager.Instance != null)
+            // {
+            //     ScoreManager.Instance.ResetScore();
+            // }
 
             Time.timeScale = 1;
         }
@@ -145,10 +136,19 @@ namespace MazeTemplate
             pointsCollectedThisLevel = 0;
             if (currentLevelPrefab != null)
             {
-                // Poiščemo vse Point komponente znotraj trenutnega levela
                 Point[] pointsInScene = currentLevelPrefab.GetComponentsInChildren<Point>(true);
                 totalPointsInLevel = pointsInScene.Length;
                 Debug.Log($"Level initialized with {totalPointsInLevel} points.");
+
+                PlayerController player = FindObjectOfType<PlayerController>();
+                if (player != null)
+                {
+                    player.canMove = true;
+                }
+                foreach (GhostController ghost in FindObjectsOfType<GhostController>())
+                {
+                    ghost.ResetToNormalState();
+                }
 
                 if (totalPointsInLevel == 0)
                 {
@@ -165,7 +165,7 @@ namespace MazeTemplate
 
         public void OnPointCollected()
         {
-            if (totalPointsInLevel < 0) return; // Level je že končan/zmagan
+            if (totalPointsInLevel < 0) return;
 
             pointsCollectedThisLevel++;
             Debug.Log($"Point collected. Total: {pointsCollectedThisLevel}/{totalPointsInLevel}");
@@ -174,7 +174,7 @@ namespace MazeTemplate
 
         private void CheckWinCondition()
         {
-            if (pointsCollectedThisLevel >= totalPointsInLevel && totalPointsInLevel >= 0) // totalPointsInLevel >= 0 prepreči zmago, če je bil level že zmagan (-1)
+            if (pointsCollectedThisLevel >= totalPointsInLevel && totalPointsInLevel >= 0)
             {
                 Debug.Log("All points collected! Level Win!");
                 if (gameplayUIComponent != null)
@@ -188,19 +188,28 @@ namespace MazeTemplate
                     else Debug.LogError("GameplayUI component could not be found to show Win Panel!");
                 }
 
-                // Onemogoči nadaljnje premikanje igralca ali ga uniči
+                // Onemogoči premikanje igralca
                 GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
                 if (playerObject != null)
                 {
                     PlayerController pc = playerObject.GetComponent<PlayerController>();
                     if (pc != null)
                     {
-                        pc.canMove = false; 
-                        
+                        pc.canMove = false;
                     }
                 }
-                totalPointsInLevel = -1; 
+                totalPointsInLevel = -1;
+
+                // Počakaj 1 sekundo, nato resetiraj level (točke ostanejo!)
+                StartCoroutine(RestartLevelAfterDelay(1.0f));
             }
+        }
+
+        // Dodaj to funkcijo
+        private IEnumerator RestartLevelAfterDelay(float delay)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+            RestartCurrentLevel();
         }
     }
 }

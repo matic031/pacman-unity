@@ -176,7 +176,7 @@ namespace MazeTemplate
             if (playerController.canMove && currentState != GhostState.Frightened && currentState != GhostState.Eaten)
             {
                 Debug.Log($"{gameObject.name} is calling PlayerHitByGhost()."); 
-                playerController.PlayerHitByGhost(); // Duh ujame Pacmana
+                playerController.PlayerHitByGhost(false); // Duh ujame Pacmana
             }
             else if (currentState == GhostState.Frightened && playerController.canMove)
             {
